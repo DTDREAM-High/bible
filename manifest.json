@@ -1,0 +1,18 @@
+{
+  "name": "신약 성경 통독 체크표",
+  "short_name": "신약통독",
+  "description": "매일 읽은 신약 성경 진도를 체크하고 달성률을 확인하는 통독표",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#4f46e5",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

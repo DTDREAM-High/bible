@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>신약 성경 통독 체크표</title>
+  <meta name="theme-color" content="#4f46e5" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="신약통독" />
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+  <link rel="apple-touch-icon" href="./icon.svg" />
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-dark: #3730a3;
+      --primary-light: #eef2ff;
+      --accent: #10b981;
+      --accent-light: #ecfdf5;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      padding-bottom: 84px;
+    }
+    .header {
+      background: linear-gradient(135deg, #4f46e5 0%, #6d28d9 100%);
+      color: #fff;
+      padding: 24px 18px 20px;
+      border-bottom-left-radius: 24px;
+      border-bottom-right-radius: 24px;
+      box-shadow: 0 4px 16px rgba(79, 70, 229, 0.2);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+    }
+    .reset-btn {
+      background: rgba(255, 255, 255, 0.18);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 11px;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+    .progress-wrap {
+      margin-bottom: 14px;
+    }
+    .progress-bar-bg {
+      width: 100%;
+      height: 10px;
+      background: rgba(255, 255, 255, 0.25);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: #34d399;
+      border-radius: 999px;
+      transition: width 0.35s ease;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.12);
+      padding: 10px 8px;
+      border-radius: 14px;
+      text-align: center;
+    }
+    .stat-item .val {
+      font-size: 16px;
+      font-weight: 800;
+      display: block;
+    }
+    .stat-item .lbl {
+      font-size: 11px;
+      opacity: 0.85;
+      margin-top: 2px;
+      display: block;
+    }
+    .controls {
+      padding: 14px 16px 6px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .filter-row {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      scrollbar-width: none;
+    }
+    .filter-row::-webkit-scrollbar { display: none; }
+    .chip {
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text-muted);
+      padding: 7px 13px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .chip.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+    .list-container {
+      padding: 8px 16px;
+      max-width: 600px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .day-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: transform 0.1s, background-color 0.2s, border-color 0.2s;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+    }
+    .day-card:active {
+      transform: scale(0.985);
+    }
+    .day-card.done {
+      background: var(--accent-light);
+      border-color: #a7f3d0;
+    }
+    .day-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .day-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .day-card.done .day-badge {
+      color: #059669;
+    }
+    .week-tag {
+      background: var(--primary-light);
+      color: var(--primary);
+      padding: 2px 7px;
+      border-radius: 6px;
+      font-size: 11px;
+    }
+    .day-card.done .week-tag {
+      background: #d1fae5;
+      color: #047857;
+    }
+    .passage-text {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .day-card.done .passage-text {
+      color: #065f46;
+      text-decoration: line-through;
+      opacity: 0.85;
+    }
+    .chapter-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .check-circle {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 2px solid #cbd5e1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: #fff;
+      transition: all 0.2s;
+    }
+    .day-card.done .check-circle {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    .check-circle svg {
+      width: 17px;
+      height: 17px;
+      opacity: 0;
+      transform: scale(0.6);
+      transition: all 0.2s;
+    }
+    .day-card.done .check-circle svg {
+      opacity: 1;
+      transform: scale(1);
+    }
+    .fab {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      padding: 13px 18px;
+      font-size: 14px;
+      font-weight: 700;
+      box-shadow: 0 6px 20px rgba(79, 70, 229, 0.35);
+      cursor: pointer;
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .fab:active {
+      transform: scale(0.96);
+    }
+    .empty-msg {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-top">
+      <h1>📖 신약 90일 통독표</h1>
+      <button class="reset-btn" onclick="resetProgress()">초기화</button>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progressBar"></div>
+      </div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-item">
+        <span class="val" id="statPercent">0%</span>
+        <span class="lbl">달성률</span>
+      </div>
+      <div class="stat-item">
+        <span class="val" id="statDays">0/90</span>
+        <span class="lbl">완료 일수</span>
+      </div>
+      <div class="stat-item">
+        <span class="val" id="statReadCh">0장</span>
+        <span class="lbl">읽은 장수</span>
+      </div>
+      <div class="stat-item">
+        <span class="val" id="statLeftCh">260장</span>
+        <span class="lbl">남은 장수</span>
+      </div>
+    </div>
+  </header>
+
+  <section class="controls">
+    <div class="filter-row" id="statusFilters">
+      <button class="chip active" data-status="all">전체 보기</button>
+      <button class="chip" data-status="todo">미완료</button>
+      <button class="chip" data-status="done">완료됨</button>
+    </div>
+    <div class="filter-row" id="weekFilters"></div>
+  </section>
+
+  <main class="list-container" id="planList"></main>
+
+  <button class="fab" onclick="scrollToNext()">다음 읽을 말씀 ↓</button>
+
+  <script>
+    const PLAN = [
+      { day: 1, week: 1, passage: "마태복음 1-3장", chapters: 3 },
+      { day: 2, week: 1, passage: "마태복음 4-6장", chapters: 3 },
+      { day: 3, week: 1, passage: "마태복음 7-9장", chapters: 3 },
+      { day: 4, week: 1, passage: "마태복음 10-12장", chapters: 3 },
+      { day: 5, week: 1, passage: "마태복음 13-15장", chapters: 3 },
+      { day: 6, week: 1, passage: "마태복음 16-18장", chapters: 3 },
+      { day: 7, week: 1, passage: "마태복음 19-21장", chapters: 3 },
+      { day: 8, week: 2, passage: "마태복음 22-24장", chapters: 3 },
+      { day: 9, week: 2, passage: "마태복음 25-27장", chapters: 3 },
+      { day: 10, week: 2, passage: "마태복음 28장, 마가복음 1-2장", chapters: 3 },
+      { day: 11, week: 2, passage: "마가복음 3-5장", chapters: 3 },
+      { day: 12, week: 2, passage: "마가복음 6-8장", chapters: 3 },
+      { day: 13, week: 2, passage: "마가복음 9-11장", chapters: 3 },
+      { day: 14, week: 2, passage: "마가복음 12-14장", chapters: 3 },
+      { day: 15, week: 3, passage: "마가복음 15-16장, 누가복음 1장", chapters: 3 },
+      { day: 16, week: 3, passage: "누가복음 2-4장", chapters: 3 },
+      { day: 17, week: 3, passage: "누가복음 5-7장", chapters: 3 },
+      { day: 18, week: 3, passage: "누가복음 8-10장", chapters: 3 },
+      { day: 19, week: 3, passage: "누가복음 11-13장", chapters: 3 },
+      { day: 20, week: 3, passage: "누가복음 14-16장", chapters: 3 },
+      { day: 21, week: 3, passage: "누가복음 17-19장", chapters: 3 },
+      { day: 22, week: 4, passage: "누가복음 20-22장", chapters: 3 },
+      { day: 23, week: 4, passage: "누가복음 23-24장, 요한복음 1장", chapters: 3 },
+      { day: 24, week: 4, passage: "요한복음 2-4장", chapters: 3 },
+      { day: 25, week: 4, passage: "요한복음 5-7장", chapters: 3 },
+      { day: 26, week: 4, passage: "요한복음 8-10장", chapters: 3 },
+      { day: 27, week: 4, passage: "요한복음 11-13장", chapters: 3 },
+      { day: 28, week: 4, passage: "요한복음 14-16장", chapters: 3 },
+      { day: 29, week: 5, passage: "요한복음 17-19장", chapters: 3 },
+      { day: 30, week: 5, passage: "요한복음 20-21장, 사도행전 1장", chapters: 3 },
+      { day: 31, week: 5, passage: "사도행전 2-4장", chapters: 3 },
+      { day: 32, week: 5, passage: "사도행전 5-7장", chapters: 3 },
+      { day: 33, week: 5, passage: "사도행전 8-10장", chapters: 3 },
+      { day: 34, week: 5, passage: "사도행전 11-13장", chapters: 3 },
+      { day: 35, week: 5, passage: "사도행전 14-16장", chapters: 3 },
+      { day: 36, week: 6, passage: "사도행전 17-19장", chapters: 3 },
+      { day: 37, week: 6, passage: "사도행전 20-22장", chapters: 3 },
+      { day: 38, week: 6, passage: "사도행전 23-25장", chapters: 3 },
+      { day: 39, week: 6, passage: "사도행전 26-28장", chapters: 3 },
+      { day: 40, week: 6, passage: "로마서 1-3장", chapters: 3 },
+      { day: 41, week: 6, passage: "로마서 4-6장", chapters: 3 },
+      { day: 42, week: 6, passage: "로마서 7-9장", chapters: 3 },
+      { day: 43, week: 7, passage: "로마서 10-12장", chapters: 3 },
+      { day: 44, week: 7, passage: "로마서 13-15장", chapters: 3 },
+      { day: 45, week: 7, passage: "로마서 16장, 고린도전서 1-2장", chapters: 3 },
+      { day: 46, week: 7, passage: "고린도전서 3-5장", chapters: 3 },
+      { day: 47, week: 7, passage: "고린도전서 6-8장", chapters: 3 },
+      { day: 48, week: 7, passage: "고린도전서 9-11장", chapters: 3 },
+      { day: 49, week: 7, passage: "고린도전서 12-14장", chapters: 3 },
+      { day: 50, week: 8, passage: "고린도전서 15-16장, 고린도후서 1장", chapters: 3 },
+      { day: 51, week: 8, passage: "고린도후서 2-4장", chapters: 3 },
+      { day: 52, week: 8, passage: "고린도후서 5-7장", chapters: 3 },
+      { day: 53, week: 8, passage: "고린도후서 8-10장", chapters: 3 },
+      { day: 54, week: 8, passage: "고린도후서 11-13장", chapters: 3 },
+      { day: 55, week: 8, passage: "갈라디아서 1-3장", chapters: 3 },
+      { day: 56, week: 8, passage: "갈라디아서 4-6장", chapters: 3 },
+      { day: 57, week: 9, passage: "에베소서 1-3장", chapters: 3 },
+      { day: 58, week: 9, passage: "에베소서 4-6장", chapters: 3 },
+      { day: 59, week: 9, passage: "빌립보서 1-3장", chapters: 3 },
+      { day: 60, week: 9, passage: "빌립보서 4장, 골로새서 1-2장", chapters: 3 },
+      { day: 61, week: 9, passage: "골로새서 3-4장, 데살로니가전서 1장", chapters: 3 },
+      { day: 62, week: 9, passage: "데살로니가전서 2-4장", chapters: 3 },
+      { day: 63, week: 9, passage: "데살로니가전서 5장, 데살로니가후서 1-2장", chapters: 3 },
+      { day: 64, week: 10, passage: "데살로니가후서 3장, 디모데전서 1-2장", chapters: 3 },
+      { day: 65, week: 10, passage: "디모데전서 3-5장", chapters: 3 },
+      { day: 66, week: 10, passage: "디모데전서 6장, 디모데후서 1-2장", chapters: 3 },
+      { day: 67, week: 10, passage: "디모데후서 3-4장, 디도서 1장", chapters: 3 },
+      { day: 68, week: 10, passage: "디도서 2-3장, 빌레몬서 1장", chapters: 3 },
+      { day: 69, week: 10, passage: "히브리서 1-3장", chapters: 3 },
+      { day: 70, week: 10, passage: "히브리서 4-6장", chapters: 3 },
+      { day: 71, week: 11, passage: "히브리서 7-9장", chapters: 3 },
+      { day: 72, week: 11, passage: "히브리서 10-12장", chapters: 3 },
+      { day: 73, week: 11, passage: "히브리서 13장, 야고보서 1-2장", chapters: 3 },
+      { day: 74, week: 11, passage: "야고보서 3-5장", chapters: 3 },
+      { day: 75, week: 11, passage: "베드로전서 1-3장", chapters: 3 },
+      { day: 76, week: 11, passage: "베드로전서 4-5장, 베드로후서 1장", chapters: 3 },
+      { day: 77, week: 11, passage: "베드로후서 2-3장, 요한일서 1장", chapters: 3 },
+      { day: 78, week: 12, passage: "요한일서 2-4장", chapters: 3 },
+      { day: 79, week: 12, passage: "요한일서 5장, 요한이서 1장, 요한삼서 1장", chapters: 3 },
+      { day: 80, week: 12, passage: "유다서 1장, 요한계시록 1-2장", chapters: 3 },
+      { day: 81, week: 12, passage: "요한계시록 3-4장", chapters: 2 },
+      { day: 82, week: 12, passage: "요한계시록 5-6장", chapters: 2 },
+      { day: 83, week: 12, passage: "요한계시록 7-8장", chapters: 2 },
+      { day: 84, week: 12, passage: "요한계시록 9-10장", chapters: 2 },
+      { day: 85, week: 13, passage: "요한계시록 11-12장", chapters: 2 },
+      { day: 86, week: 13, passage: "요한계시록 13-14장", chapters: 2 },
+      { day: 87, week: 13, passage: "요한계시록 15-16장", chapters: 2 },
+      { day: 88, week: 13, passage: "요한계시록 17-18장", chapters: 2 },
+      { day: 89, week: 13, passage: "요한계시록 19-20장", chapters: 2 },
+      { day: 90, week: 13, passage: "요한계시록 21-22장", chapters: 2 }
+    ];
+
+    const STORAGE_KEY = 'nt_bible_plan_v1';
+    let completed = new Set(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'));
+    let statusFilter = 'all';
+    let weekFilter = 'all';
+
+    function saveProgress() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify([...completed]));
+    }
+
+    function updateStats() {
+      const totalDays = PLAN.length;
+      const doneDays = completed.size;
+      const totalChapters = 260;
+      let readChapters = 0;
+      PLAN.forEach(item => {
+        if (completed.has(item.day)) readChapters += item.chapters;
+      });
+      const leftChapters = totalChapters - readChapters;
+      const percent = Math.round((readChapters / totalChapters) * 100);
+
+      document.getElementById('progressBar').style.width = percent + '%';
+      document.getElementById('statPercent').textContent = percent + '%';
+      document.getElementById('statDays').textContent = `${doneDays}/${totalDays}`;
+      document.getElementById('statReadCh').textContent = `${readChapters}장`;
+      document.getElementById('statLeftCh').textContent = `${leftChapters}장`;
+    }
+
+    function renderWeekChips() {
+      const container = document.getElementById('weekFilters');
+      let html = `<button class="chip active" data-week="all">전체 주차</button>`;
+      for (let w = 1; w <= 13; w++) {
+        html += `<button class="chip" data-week="${w}">${w}주차</button>`;
+      }
+      container.innerHTML = html;
+
+      container.querySelectorAll('.chip').forEach(btn => {
+        btn.addEventListener('click', () => {
+          container.querySelectorAll('.chip').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          weekFilter = btn.dataset.week;
+          renderList();
+        });
+      });
+    }
+
+    function toggleDay(day) {
+      if (completed.has(day)) {
+        completed.delete(day);
+      } else {
+        completed.add(day);
+      }
+      saveProgress();
+      updateStats();
+      renderList();
+    }
+
+    function renderList() {
+      const listEl = document.getElementById('planList');
+      const filtered = PLAN.filter(item => {
+        const isDone = completed.has(item.day);
+        if (statusFilter === 'todo' && isDone) return false;
+        if (statusFilter === 'done' && !isDone) return false;
+        if (weekFilter !== 'all' && String(item.week) !== weekFilter) return false;
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        listEl.innerHTML = `<div class="empty-msg">해당 조건의 통독 일정이 없습니다.</div>`;
+        return;
+      }
+
+      listEl.innerHTML = filtered.map(item => {
+        const isDone = completed.has(item.day);
+        return `
+          <div class="day-card ${isDone ? 'done' : ''}" id="day-${item.day}" onclick="toggleDay(${item.day})">
+            <div class="day-info">
+              <div class="day-badge">
+                <span class="week-tag">${item.week}주차</span>
+                <span>Day ${item.day}</span>
+              </div>
+              <div class="passage-text">${item.passage}</div>
+              <div class="chapter-sub">분량: ${item.chapters}장</div>
+            </div>
+            <div class="check-circle">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function scrollToNext() {
+      statusFilter = 'all';
+      weekFilter = 'all';
+      document.querySelectorAll('#statusFilters .chip').forEach(b => {
+        b.classList.toggle('active', b.dataset.status === 'all');
+      });
+      document.querySelectorAll('#weekFilters .chip').forEach(b => {
+        b.classList.toggle('active', b.dataset.week === 'all');
+      });
+      renderList();
+
+      const nextItem = PLAN.find(item => !completed.has(item.day));
+      if (nextItem) {
+        const el = document.getElementById('day-' + nextItem.day);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.style.boxShadow = '0 0 0 3px rgba(79, 70, 229, 0.4)';
+          setTimeout(() => { el.style.boxShadow = ''; }, 1200);
+        }
+      } else {
+        alert('축하합니다! 신약 성경 90일 통독을 모두 완료하셨습니다! 🎉');
+      }
+    }
+
+    function resetProgress() {
+      if (confirm('모든 통독 체크 기록을 초기화할까요?')) {
+        completed.clear();
+        saveProgress();
+        updateStats();
+        renderList();
+      }
+    }
+
+    document.querySelectorAll('#statusFilters .chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#statusFilters .chip').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        statusFilter = btn.dataset.status;
+        renderList();
+      });
+    });
+
+    renderWeekChips();
+    updateStats();
+    renderList();
+  </script>
+</body>
+</html>
